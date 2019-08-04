@@ -4,17 +4,18 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/larsp/co2monitor/meter"
+	"github.com/paulhenke/co2monitor/meter"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/push"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
-	device     = kingpin.Arg("device", "CO2 Meter device, such as /dev/hidraw2").Required().String()
-	listenAddr = kingpin.Arg("listen-address", "The address to listen on for HTTP requests.").
-			Default(":8080").String()
+	device      = kingpin.Arg("device", "CO2 Meter device, such as /dev/hidraw2").Required().String()
+	listenAddr  = kingpin.Arg("listen-address", "The address to listen on for HTTP requests.").Default(":8080").String()
+	pushgateway = kingpin.Arg("pushgateway", "").Default("").String()
 )
 
 var (
@@ -56,5 +57,12 @@ func measure() {
 		}
 		temperature.Set(result.Temperature)
 		co2.Set(float64(result.Co2))
+
+		if *pushgateway != "" {
+			err := push.New(*pushgateway, "co2monitor").Gatherer(prometheus.DefaultGatherer).Push()
+			if err != nil {
+				log.Printf("failed to push to gateway: %v", err)
+			}
+		}
 	}
 }
