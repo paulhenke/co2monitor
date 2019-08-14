@@ -1,13 +1,15 @@
+FLAGS := -mod=vendor
+
 install:
-	go install -v
+	GOFLAGS=$(FLAGS) go install -v
 
 build:
-	go build -v
+	GOFLAGS=$(FLAGS) go build -v
 
 build_pi:
-	GOOS=linux GOARCH=arm GOARM=6 go build -v
+	GOFLAGS=$(FLAGS) GOOS=linux GOARCH=arm GOARM=6 go build -v
 
 test:
-	go test --race -v ./...
+	GOFLAGS=$(FLAGS) go test --race -v ./...
 
 .PHONY: install build build_pi test
